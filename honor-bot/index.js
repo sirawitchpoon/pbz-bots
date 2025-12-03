@@ -99,6 +99,36 @@ client.on('messageCreate', async (message) => {
         }
     }
 
+    // --- คำสั่งลงทะเบียนเริ่มต้น (!start) ---
+    if (message.content.toLowerCase() === '!start') {
+        try {
+            // 1. เช็คก่อนว่ามีชื่อในระบบหรือยัง?
+            const existingUser = await prisma.user.findUnique({
+                where: { id: message.author.id }
+            });
+
+            if (existingUser) {
+                return message.reply(`⚔️ **Warrior ${message.author.username}**, your name is already inscribed in the Order.`);
+            }
+
+            // 2. ถ้ายังไม่มี ให้สร้างใหม่เลย
+            await prisma.user.create({
+                data: {
+                    id: message.author.id,
+                    username: message.author.username,
+                    points: 10 // ✨ แถมแต้มต้อนรับให้ 10 แต้ม (แก้เป็น 0 ได้ถ้าไม่อยากแจก)
+                }
+            });
+
+            await message.reply(`📜 **Welcome to the Order!**\nYou have been registered with **10 starting souls**. Use \`!shop\` to view rewards.`);
+            console.log(`New user registered: ${message.author.username}`);
+
+        } catch (error) {
+            console.error("Register Error:", error);
+            await message.reply("❌ Failed to register. The scroll seems torn.");
+        }
+    }
+
     if (message.content.toLowerCase() === '!honor') {
         const user = await prisma.user.findUnique({
             where: { id: message.author.id }
