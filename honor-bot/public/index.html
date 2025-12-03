@@ -14,13 +14,11 @@
             --dark-bg: #0f0f0f;
             --card-bg: rgba(30, 30, 30, 0.7);
             --text-main: #e0e0e0;
-            --border-glow: rgba(255, 51, 51, 0.3);
         }
 
         body {
             font-family: 'Noto Sans', sans-serif;
             background-color: var(--dark-bg);
-            /* ใส่ Background รูปเกมเท่ๆ ตรงนี้ */
             background-image: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url('https://images.wallpapersden.com/image/download/phantom-blade-zero_bmdnaWmUmZqaraWkpJRmbmdlrWZlbWU.jpg');
             background-size: cover;
             background-attachment: fixed;
@@ -139,7 +137,8 @@
         }
 
         input,
-        button {
+        button,
+        select {
             padding: 12px;
             background: rgba(0, 0, 0, 0.5);
             border: 1px solid #444;
@@ -148,7 +147,8 @@
             font-family: inherit;
         }
 
-        input:focus {
+        input:focus,
+        select:focus {
             outline: none;
             border-color: var(--primary);
         }
@@ -217,13 +217,27 @@
         .close:hover {
             color: var(--primary);
         }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #888;
+            font-size: 0.9em;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 
 <body>
 
     <script>
-        // เช็คก่อนเลยว่า Login หรือยัง ถ้ายังให้ดีดไปหน้า Login
+        // ✅ 1. สร้างตัวแปรกลางไว้เก็บข้อมูลสินค้า
+        let currentItems = [];
+
+        // เช็ค Login
         fetch('/api/check-auth')
             .then(res => res.json())
             .then(data => {
@@ -290,225 +304,198 @@
         </div>
     </div>
 
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('userModal')">&times;</span>
+            <h2 style="color: var(--primary);">Edit Warrior Honor</h2>
+            <input type="hidden" id="editUserId">
+            <div class="form-group">
+                <p>User: <strong id="editUserName" style="color:var(--primary)"></strong></p>
+            </div>
+            <div class="form-group">
+                <label>Points (Souls)</label>
+                <input type="number" id="editUserPoints" style="width: 100%; box-sizing: border-box;">
+            </div>
+            <button class="btn-add" onclick="saveUser()">Save Changes</button>
+        </div>
+    </div>
+
+    <div id="itemModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('itemModal')">&times;</span>
+            <h2 style="color: var(--primary);">Edit Item Details</h2>
+            <input type="hidden" id="editItemId">
+
+            <div class="form-group">
+                <label>Item Name</label>
+                <input type="text" id="editItemName" style="width: 100%; box-sizing: border-box;">
+            </div>
+
+            <div class="form-group">
+                <label>Cost</label>
+                <input type="number" id="editItemCost" style="width: 100%; box-sizing: border-box;">
+            </div>
+
+            <div class="form-group">
+                <label>Description</label>
+                <input type="text" id="editItemDesc" style="width: 100%; box-sizing: border-box;">
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <div style="flex:1">
+                    <label>Stock (-1 = inf)</label>
+                    <input type="number" id="editItemStock" style="width: 100%; box-sizing: border-box;">
+                </div>
+                <div style="flex:1">
+                    <label>Status</label>
+                    <select id="editItemActive" style="width:100%; box-sizing: border-box;">
+                        <option value="true">Active</option>
+                        <option value="false">Hidden</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn-add" onclick="saveItem()">Save Changes</button>
+        </div>
+    </div>
+
     <script>
-
         // --- LOAD DATA ---
-
         async function fetchUsers() {
-
             const res = await fetch('/api/users');
-
+            if (!res.ok) return;
             const users = await res.json();
-
             const tbody = document.getElementById('userBody');
-
             tbody.innerHTML = '';
-
             users.forEach(u => {
-
                 tbody.innerHTML += `
-
                 <tr>
-
                     <td>${u.username}</td>
-
                     <td><span class="badge">${u.points}</span></td>
-
                     <td>
-
-                        <button class="btn btn-edit btn-sm" onclick="openUserModal('${u.id}', '${u.username}', ${u.points})">✏️</button>
-
+                        <button class="btn-action" onclick="openUserModal('${u.id}', '${u.username}', ${u.points})">✏️</button>
                     </td>
-
                 </tr>`;
-
             });
-
         }
-
-
 
         async function fetchItems() {
             const res = await fetch('/api/items');
-            if (!res.ok) return; // ดัก error เผื่อ session หมดอายุ
-            const items = await res.json();
+            if (!res.ok) return;
+
+            // ✅ 2. เก็บข้อมูลลงตัวแปรกลาง
+            currentItems = await res.json();
+
             const tbody = document.getElementById('itemBody');
             tbody.innerHTML = '';
-            items.forEach(i => {
+
+            // ✅ 3. วนลูปโดยดึง index (ลำดับ 0, 1, 2...) มาด้วย
+            currentItems.forEach((i, index) => {
                 const stockDisplay = i.stock === -1 ? '∞' : i.stock;
                 const style = i.isActive ? '' : 'opacity: 0.5;';
 
                 tbody.innerHTML += `
                 <tr style="${style}">
-                    <td><span style="color:#666">#${i.id}</span></td> <td>
+                    <td><span style="color:#666">#${i.id}</span></td>
+                    <td>
                         <strong>${i.name}</strong><br>
                         <small style="color:#888">${i.description || '-'}</small>
                     </td>
                     <td><span class="badge" style="background:none; border:1px solid #444; color:#ccc">${i.cost}</span></td>
                     <td>${stockDisplay}</td>
                     <td>
-                        <button class="btn-action" onclick='openItemModal(${JSON.stringify(i)})'>✏️</button>
+                        <button class="btn-action" onclick="openItemModal(${index})">✏️</button>
                     </td>
                 </tr>`;
             });
         }
 
-
-
         // --- ADD ITEM ---
-
         async function addItem() {
-
             const name = document.getElementById('newNames').value;
-
             const cost = document.getElementById('newCost').value;
-
             if (!name || !cost) return alert("Missing info");
 
             await fetch('/api/items', {
-
                 method: 'POST',
-
                 headers: { 'Content-Type': 'application/json' },
-
                 body: JSON.stringify({ name, cost, description: '', stock: -1 })
-
             });
 
             document.getElementById('newNames').value = '';
-
             document.getElementById('newCost').value = '';
-
             fetchItems();
-
         }
-
-
 
         // --- EDIT USER LOGIC ---
-
         function openUserModal(id, name, points) {
-
             document.getElementById('userModal').style.display = 'block';
-
             document.getElementById('editUserId').value = id;
-
             document.getElementById('editUserName').innerText = name;
-
             document.getElementById('editUserPoints').value = points;
-
         }
 
-
-
         async function saveUser() {
-
             const id = document.getElementById('editUserId').value;
-
             const points = document.getElementById('editUserPoints').value;
 
             await fetch(`/api/users/${id}`, {
-
                 method: 'PUT',
-
                 headers: { 'Content-Type': 'application/json' },
-
                 body: JSON.stringify({ points })
-
             });
 
             closeModal('userModal');
-
             fetchUsers();
-
         }
-
-
 
         // --- EDIT ITEM LOGIC ---
-
-        function openItemModal(item) {
+        // ✅ แก้ให้รับ index
+        function openItemModal(index) {
+            const item = currentItems[index]; // ดึงข้อมูลจากตัวแปรกลาง
 
             document.getElementById('itemModal').style.display = 'block';
-
             document.getElementById('editItemId').value = item.id;
-
             document.getElementById('editItemName').value = item.name;
-
             document.getElementById('editItemCost').value = item.cost;
-
             document.getElementById('editItemDesc').value = item.description || '';
-
             document.getElementById('editItemStock').value = item.stock;
-
             document.getElementById('editItemActive').value = item.isActive.toString();
-
         }
 
-
-
         async function saveItem() {
-
             const id = document.getElementById('editItemId').value;
-
             const body = {
-
                 name: document.getElementById('editItemName').value,
-
                 cost: document.getElementById('editItemCost').value,
-
                 description: document.getElementById('editItemDesc').value,
-
                 stock: document.getElementById('editItemStock').value,
-
                 isActive: document.getElementById('editItemActive').value === 'true'
-
             };
 
             await fetch(`/api/items/${id}`, {
-
                 method: 'PUT',
-
                 headers: { 'Content-Type': 'application/json' },
-
                 body: JSON.stringify(body)
-
             });
 
             closeModal('itemModal');
-
             fetchItems();
-
         }
 
-
-
         // --- UTILS ---
-
         function closeModal(id) {
-
             document.getElementById(id).style.display = 'none';
-
         }
 
         window.onclick = function (event) {
-
             if (event.target.classList.contains('modal')) {
-
                 event.target.style.display = "none";
-
             }
-
         }
 
-
-
         // Init
-
         fetchUsers();
-
         fetchItems();
-
     </script>
 
 </body>
