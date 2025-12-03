@@ -44,3 +44,10 @@ model Redemption {
   user      User     @relation(fields: [userId], references: [id])
   item      Item     @relation(fields: [itemId], references: [id])
 }
+
+// ✅ เพิ่มตาราง Admin
+model Admin {
+  id       Int    @id @default(autoincrement())
+  username String @unique
+  password String // จะเก็บแบบ Hash
+}

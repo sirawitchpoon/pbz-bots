@@ -4,37 +4,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phantom Blade Zero - Admin Console</title>
+    <title>Phantom Blade Zero - Command Center</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Noto+Sans:wght@400;700&display=swap');
+
+        /* --- THEME VARIABLES --- */
+        :root {
+            --primary: #ff3333;
+            --dark-bg: #0f0f0f;
+            --card-bg: rgba(30, 30, 30, 0.7);
+            --text-main: #e0e0e0;
+            --border-glow: rgba(255, 51, 51, 0.3);
+        }
+
         body {
-            font-family: 'Segoe UI', sans-serif;
-            background: #121212;
-            color: #e0e0e0;
+            font-family: 'Noto Sans', sans-serif;
+            background-color: var(--dark-bg);
+            /* ใส่ Background รูปเกมเท่ๆ ตรงนี้ */
+            background-image: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url('https://images.wallpapersden.com/image/download/phantom-blade-zero_bmdnaWmUmZqaraWkpJRmbmdlrWZlbWU.jpg');
+            background-size: cover;
+            background-attachment: fixed;
+            color: var(--text-main);
+            margin: 0;
             padding: 20px;
         }
 
         .container {
-            max-width: 1000px;
+            max-width: 1100px;
             margin: 0 auto;
             display: grid;
             gap: 30px;
         }
 
-        h1,
-        h2 {
-            border-bottom: 2px solid #ff4d4d;
-            padding-bottom: 10px;
-            color: #ff4d4d;
-            margin-top: 0;
+        /* HEADER */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 20px;
+            margin-bottom: 20px;
         }
 
+        h1 {
+            font-family: 'Cinzel', serif;
+            color: #fff;
+            margin: 0;
+            text-shadow: 0 0 10px var(--primary);
+            font-size: 2.5rem;
+        }
+
+        .logout-btn {
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 8px 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 0 15px var(--primary);
+        }
+
+        /* CARDS */
         .section {
-            background: #1e1e1e;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid #333;
+            border-left: 4px solid var(--primary);
+            padding: 25px;
+            border-radius: 4px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
 
+        h2 {
+            font-family: 'Cinzel', serif;
+            color: #fff;
+            margin-top: 0;
+            border-bottom: 1px solid #444;
+            padding-bottom: 10px;
+        }
+
+        /* TABLES */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th {
+            text-align: left;
+            color: #888;
+            text-transform: uppercase;
+            font-size: 0.85em;
+            padding: 10px;
+            border-bottom: 1px solid #444;
+        }
+
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #333;
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* BADGES */
+        .badge {
+            background: rgba(255, 51, 51, 0.15);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            padding: 4px 10px;
+            border-radius: 2px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        /* FORMS & BUTTONS */
         .grid-2 {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -47,97 +138,54 @@
             }
         }
 
-        /* Tables */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-
-        th,
-        td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #333;
-        }
-
-        th {
-            background: #2d2d2d;
-            color: #ff4d4d;
-        }
-
-        tr:hover {
-            background: #262626;
-        }
-
-        /* UI Elements */
-        .badge {
-            background: #ff4d4d;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 0.9em;
-        }
-
-        .btn {
-            padding: 8px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.2s;
-        }
-
-        .btn-primary {
-            background: #ff4d4d;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #e60000;
-        }
-
-        .btn-sm {
-            padding: 4px 8px;
-            font-size: 0.8em;
-            margin-left: 5px;
-        }
-
-        .btn-edit {
-            background: #4d94ff;
-            color: white;
-        }
-
-        .btn-delete {
-            background: #555;
-            color: #ccc;
-        }
-
-        .btn-delete:hover {
-            background: #ff3333;
-            color: white;
-        }
-
         input,
-        textarea,
-        select {
-            padding: 10px;
-            background: #2d2d2d;
+        button {
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.5);
             border: 1px solid #444;
             color: white;
-            border-radius: 4px;
-            width: 100%;
-            box-sizing: border-box;
-            margin-bottom: 10px;
+            border-radius: 2px;
+            font-family: inherit;
         }
 
         input:focus {
             outline: none;
-            border-color: #ff4d4d;
+            border-color: var(--primary);
         }
 
-        /* Modal Styles */
+        .btn-add {
+            background: var(--primary);
+            border: none;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.2s;
+        }
+
+        .btn-add:hover {
+            background: #ff0000;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.4);
+        }
+
+        .btn-action {
+            background: #333;
+            border: none;
+            cursor: pointer;
+            color: #aaa;
+            transition: 0.2s;
+            border-radius: 4px;
+            padding: 5px 10px;
+        }
+
+        .btn-action:hover {
+            color: white;
+            background: #555;
+        }
+
+        /* MODAL */
         .modal {
             display: none;
             position: fixed;
@@ -146,39 +194,53 @@
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
+            background-color: rgba(0, 0, 0, 0.9);
         }
 
         .modal-content {
-            background-color: #1e1e1e;
+            background: #1a1a1a;
             margin: 10% auto;
-            padding: 25px;
-            border: 1px solid #ff4d4d;
+            padding: 30px;
+            border: 1px solid var(--primary);
             width: 400px;
-            border-radius: 8px;
-            box-shadow: 0 0 20px rgba(255, 77, 77, 0.2);
+            box-shadow: 0 0 50px rgba(255, 51, 51, 0.2);
+            position: relative;
         }
 
         .close {
-            color: #aaa;
             float: right;
             font-size: 28px;
-            font-weight: bold;
             cursor: pointer;
+            color: #666;
         }
 
         .close:hover {
-            color: white;
+            color: var(--primary);
         }
     </style>
 </head>
 
 <body>
 
+    <script>
+        // เช็คก่อนเลยว่า Login หรือยัง ถ้ายังให้ดีดไปหน้า Login
+        fetch('/api/check-auth')
+            .then(res => res.json())
+            .then(data => {
+                if (!data.loggedIn) window.location.href = '/login.html';
+            });
+
+        function logout() {
+            fetch('/api/logout', { method: 'POST' })
+                .then(() => window.location.href = '/login.html');
+        }
+    </script>
+
     <div class="container">
-        <center>
-            <h1>🗡️ The Order's Admin Console</h1>
-        </center>
+        <header>
+            <h1>🗡️ Phantom Command</h1>
+            <button class="logout-btn" onclick="logout()">LOGOUT</button>
+        </header>
 
         <div class="grid-2">
             <div class="section">
@@ -198,15 +260,16 @@
             </div>
 
             <div class="section">
-                <h2>🎒 Item Registry</h2>
+                <h2>🎒 Supply Registry</h2>
 
-                <div style="background: #2d2d2d; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
-                    <h3 style="margin: 0 0 10px 0; font-size:1em; color:#ccc;">Add New Reward</h3>
-                    <div style="display: flex; gap: 10px;">
+                <div style="background: rgba(255,255,255,0.05); padding: 15px; margin-bottom: 20px;">
+                    <h3 style="margin: 0 0 10px 0; font-size:0.9em; color:#aaa; text-transform: uppercase;">New Reward
+                    </h3>
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                         <input type="text" id="newNames" placeholder="Item Name" style="flex: 2;">
                         <input type="number" id="newCost" placeholder="Cost" style="flex: 1;">
                     </div>
-                    <button class="btn btn-primary" style="width: 100%;" onclick="addItem()">+ Add Item</button>
+                    <button class="btn-add" onclick="addItem()">+ Add to Registry</button>
                 </div>
 
                 <div style="height: 300px; overflow-y: auto;">
@@ -226,162 +289,238 @@
         </div>
     </div>
 
-    <div id="userModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('userModal')">&times;</span>
-            <h2>Edit Warrior Honor</h2>
-            <input type="hidden" id="editUserId">
-            <p>User: <strong id="editUserName" style="color:#ff4d4d"></strong></p>
-            <label>Points (Souls):</label>
-            <input type="number" id="editUserPoints">
-            <button class="btn btn-primary" onclick="saveUser()">Save Changes</button>
-        </div>
-    </div>
-
-    <div id="itemModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('itemModal')">&times;</span>
-            <h2>Edit Item Details</h2>
-            <input type="hidden" id="editItemId">
-            <label>Item Name:</label>
-            <input type="text" id="editItemName">
-            <label>Cost:</label>
-            <input type="number" id="editItemCost">
-            <label>Description:</label>
-            <textarea id="editItemDesc" rows="3"></textarea>
-            <div style="display: flex; gap: 10px;">
-                <div style="flex:1">
-                    <label>Stock (-1 = inf):</label>
-                    <input type="number" id="editItemStock">
-                </div>
-                <div style="flex:1">
-                    <label>Status:</label>
-                    <select id="editItemActive">
-                        <option value="true">Active</option>
-                        <option value="false">Hidden</option>
-                    </select>
-                </div>
-            </div>
-            <button class="btn btn-primary" style="width:100%" onclick="saveItem()">Save Changes</button>
-        </div>
-    </div>
-
     <script>
+
         // --- LOAD DATA ---
+
         async function fetchUsers() {
+
             const res = await fetch('/api/users');
+
             const users = await res.json();
+
             const tbody = document.getElementById('userBody');
+
             tbody.innerHTML = '';
+
             users.forEach(u => {
+
                 tbody.innerHTML += `
+
                 <tr>
+
                     <td>${u.username}</td>
+
                     <td><span class="badge">${u.points}</span></td>
+
                     <td>
+
                         <button class="btn btn-edit btn-sm" onclick="openUserModal('${u.id}', '${u.username}', ${u.points})">✏️</button>
+
                     </td>
+
                 </tr>`;
+
             });
+
         }
+
+
 
         async function fetchItems() {
+
             const res = await fetch('/api/items');
+
             const items = await res.json();
+
             const tbody = document.getElementById('itemBody');
+
             tbody.innerHTML = '';
+
             items.forEach(i => {
+
                 const stockDisplay = i.stock === -1 ? '∞' : i.stock;
+
                 const style = i.isActive ? '' : 'opacity: 0.5;';
+
                 tbody.innerHTML += `
+
                 <tr style="${style}">
+
                     <td><strong>${i.name}</strong></td>
+
                     <td>${i.cost}</td>
+
                     <td>${stockDisplay}</td>
+
                     <td>
+
                         <button class="btn btn-edit btn-sm" onclick='openItemModal(${JSON.stringify(i)})'>✏️</button>
+
                     </td>
+
                 </tr>`;
+
             });
+
         }
+
+
 
         // --- ADD ITEM ---
+
         async function addItem() {
+
             const name = document.getElementById('newNames').value;
+
             const cost = document.getElementById('newCost').value;
+
             if (!name || !cost) return alert("Missing info");
+
             await fetch('/api/items', {
+
                 method: 'POST',
+
                 headers: { 'Content-Type': 'application/json' },
+
                 body: JSON.stringify({ name, cost, description: '', stock: -1 })
+
             });
+
             document.getElementById('newNames').value = '';
+
             document.getElementById('newCost').value = '';
+
             fetchItems();
+
         }
+
+
 
         // --- EDIT USER LOGIC ---
+
         function openUserModal(id, name, points) {
+
             document.getElementById('userModal').style.display = 'block';
+
             document.getElementById('editUserId').value = id;
+
             document.getElementById('editUserName').innerText = name;
+
             document.getElementById('editUserPoints').value = points;
+
         }
+
+
 
         async function saveUser() {
+
             const id = document.getElementById('editUserId').value;
+
             const points = document.getElementById('editUserPoints').value;
+
             await fetch(`/api/users/${id}`, {
+
                 method: 'PUT',
+
                 headers: { 'Content-Type': 'application/json' },
+
                 body: JSON.stringify({ points })
+
             });
+
             closeModal('userModal');
+
             fetchUsers();
+
         }
+
+
 
         // --- EDIT ITEM LOGIC ---
+
         function openItemModal(item) {
+
             document.getElementById('itemModal').style.display = 'block';
+
             document.getElementById('editItemId').value = item.id;
+
             document.getElementById('editItemName').value = item.name;
+
             document.getElementById('editItemCost').value = item.cost;
+
             document.getElementById('editItemDesc').value = item.description || '';
+
             document.getElementById('editItemStock').value = item.stock;
+
             document.getElementById('editItemActive').value = item.isActive.toString();
+
         }
+
+
 
         async function saveItem() {
+
             const id = document.getElementById('editItemId').value;
+
             const body = {
+
                 name: document.getElementById('editItemName').value,
+
                 cost: document.getElementById('editItemCost').value,
+
                 description: document.getElementById('editItemDesc').value,
+
                 stock: document.getElementById('editItemStock').value,
+
                 isActive: document.getElementById('editItemActive').value === 'true'
+
             };
+
             await fetch(`/api/items/${id}`, {
+
                 method: 'PUT',
+
                 headers: { 'Content-Type': 'application/json' },
+
                 body: JSON.stringify(body)
+
             });
+
             closeModal('itemModal');
+
             fetchItems();
+
         }
+
+
 
         // --- UTILS ---
+
         function closeModal(id) {
+
             document.getElementById(id).style.display = 'none';
-        }
-        window.onclick = function (event) {
-            if (event.target.classList.contains('modal')) {
-                event.target.style.display = "none";
-            }
+
         }
 
+        window.onclick = function (event) {
+
+            if (event.target.classList.contains('modal')) {
+
+                event.target.style.display = "none";
+
+            }
+
+        }
+
+
+
         // Init
+
         fetchUsers();
+
         fetchItems();
+
     </script>
 
 </body>

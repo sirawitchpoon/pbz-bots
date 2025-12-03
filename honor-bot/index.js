@@ -3,6 +3,8 @@ const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 const { PrismaClient } = require('@prisma/client');
 const express = require('express'); // 1. เรียก Express
 const cors = require('cors');       // 2. เรียก CORS
+const bcrypt = require('bcrypt');
+const session = require('express-session');
 
 const prisma = new PrismaClient();
 const client = new Client({
@@ -24,6 +26,73 @@ app.use(express.json()); // อ่าน JSON จาก Body ได้
 // ✅ เพิ่มบรรทัดนี้: บอกว่าถ้าคนเข้าเว็บมาเฉยๆ ให้ไปหาไฟล์ในโฟลเดอร์ public
 app.use(express.static('public'));
 
+// 🔐 ตั้งค่า Session
+app.use(session({
+    secret: 'phantom-blade-secret-key', // เปลี่ยนเป็นอะไรก็ได้ที่ยาวๆ
+    resave: false,
+    saveUninitialized: false,
+    cookie: { maxAge: 3600000 } // Login อยู่ได้ 1 ชั่วโมง
+}));
+
+// 🛡️ Middleware: ด่านตรวจคนเข้าเมือง (Admin Only)
+const requireAuth = (req, res, next) => {
+    if (req.session.adminId) {
+        next(); // ผ่านไปได้
+    } else {
+        res.status(401).json({ error: "Unauthorized: Please login first" });
+    }
+};
+
+// --- AUTH API ---
+
+// API: Register (สร้าง Admin คนแรก)
+app.post('/api/register', async (req, res) => {
+    const { username, password } = req.body;
+    try {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const admin = await prisma.admin.create({
+            data: { username, password: hashedPassword }
+        });
+        req.session.adminId = admin.id; // สมัครเสร็จ Login ให้เลย
+        res.json({ success: true });
+    } catch (error) {
+        res.status(400).json({ error: "Username already exists" });
+    }
+});
+
+// API: Login
+app.post('/api/login', async (req, res) => {
+    const { username, password } = req.body;
+    const admin = await prisma.admin.findUnique({ where: { username } });
+
+    if (admin && await bcrypt.compare(password, admin.password)) {
+        req.session.adminId = admin.id;
+        res.json({ success: true });
+    } else {
+        res.status(401).json({ error: "Invalid credentials" });
+    }
+});
+
+// API: Logout
+app.post('/api/logout', (req, res) => {
+    req.session.destroy();
+    res.json({ success: true });
+});
+
+// API: Check Auth (สำหรับหน้าเว็บเช็คว่า Login อยู่ไหม)
+app.get('/api/check-auth', (req, res) => {
+    if (req.session.adminId) res.json({ loggedIn: true });
+    else res.json({ loggedIn: false });
+});
+
+// --- DATA API (ใส่ requireAuth ดักไว้ทุกอัน!) ---
+
+app.get('/api/users', requireAuth, async (req, res) => {
+    // ... (Code เดิม)
+    const users = await prisma.user.findMany({ orderBy: { points: 'desc' } });
+    res.json(users);
+});
+
 // API: ดึงข้อมูล User ทั้งหมด (เรียงตามแต้มมากสุด)
 app.get('/api/users', async (req, res) => {
     try {
@@ -37,7 +106,7 @@ app.get('/api/users', async (req, res) => {
 });
 
 // API: เพิ่มของรางวัลใหม่ (Admin)
-app.post('/api/items', async (req, res) => {
+app.post('/api/items', requireAuth, async (req, res) => {
     const { name, cost, description } = req.body;
     try {
         const newItem = await prisma.item.create({
@@ -54,7 +123,7 @@ app.post('/api/items', async (req, res) => {
 });
 
 // ✅ เพิ่มอันนี้: API ดึงรายชื่อของรางวัลทั้งหมด
-app.get('/api/items', async (req, res) => {
+app.get('/api/items', requireAuth, async (req, res) => {
     try {
         const items = await prisma.item.findMany({
             orderBy: { id: 'asc' } // เรียงตาม ID
@@ -66,7 +135,7 @@ app.get('/api/items', async (req, res) => {
 });
 
 // API: แก้ไขแต้มผู้ใช้
-app.put('/api/users/:id', async (req, res) => {
+app.put('/api/users/:id', requireAuth, async (req, res) => {
     const { id } = req.params;
     const { points } = req.body;
     try {
@@ -82,7 +151,7 @@ app.put('/api/users/:id', async (req, res) => {
 });
 
 // API: แก้ไขรายละเอียดสินค้า
-app.put('/api/items/:id', async (req, res) => {
+app.put('/api/items/:id', requireAuth, async (req, res) => {
     const { id } = req.params;
     const { name, cost, description, stock, isActive } = req.body;
     try {
@@ -104,7 +173,7 @@ app.put('/api/items/:id', async (req, res) => {
 });
 
 // API: ลบสินค้า (แถมให้เผื่ออยากลบ)
-app.delete('/api/items/:id', async (req, res) => {
+app.delete('/api/items/:id', requireAuth, async (req, res) => {
     try {
         await prisma.item.delete({ where: { id: parseInt(req.params.id) } });
         res.json({ success: true });
