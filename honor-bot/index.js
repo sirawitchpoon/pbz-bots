@@ -43,30 +43,18 @@ const requireAuth = (req, res, next) => {
     }
 };
 
-// --- AUTH API ---
+// --- AUTH SYSTEM (Simplified) ---
 
-// API: Register (สร้าง Admin คนแรก)
-app.post('/api/register', async (req, res) => {
+// API: Login (เช็คกับ .env โดยตรง)
+app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
-    try {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const admin = await prisma.admin.create({
-            data: { username, password: hashedPassword }
-        });
-        req.session.adminId = admin.id; // สมัครเสร็จ Login ให้เลย
-        res.json({ success: true });
-    } catch (error) {
-        res.status(400).json({ error: "Username already exists" });
-    }
-});
 
-// API: Login
-app.post('/api/login', async (req, res) => {
-    const { username, password } = req.body;
-    const admin = await prisma.admin.findUnique({ where: { username } });
+    // ดึงค่าจาก .env มาเทียบ
+    const envUser = process.env.ADMIN_USERNAME;
+    const envPass = process.env.ADMIN_PASSWORD;
 
-    if (admin && await bcrypt.compare(password, admin.password)) {
-        req.session.adminId = admin.id;
+    if (username === envUser && password === envPass) {
+        req.session.adminId = 'fixed_admin_session'; // Set Session หลอกๆ ว่า Login แล้ว
         res.json({ success: true });
     } else {
         res.status(401).json({ error: "Invalid credentials" });
@@ -79,8 +67,9 @@ app.post('/api/logout', (req, res) => {
     res.json({ success: true });
 });
 
-// API: Check Auth (สำหรับหน้าเว็บเช็คว่า Login อยู่ไหม)
+// API: Check Auth
 app.get('/api/check-auth', (req, res) => {
+    // เช็คแค่ว่ามี Session หรือไม่
     if (req.session.adminId) res.json({ loggedIn: true });
     else res.json({ loggedIn: false });
 });

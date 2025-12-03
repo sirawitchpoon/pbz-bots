@@ -141,30 +141,26 @@
         </div>
         <div class="input-group">
             <label>Password</label>
-            <input type="password" id="password">
+            <input type="password" id="password" onkeypress="handleEnter(event)">
         </div>
 
-        <button onclick="handleAuth()" id="authBtn">Initialize Link</button>
-        <p class="toggle-text" onclick="toggleMode()">First time? Register here</p>
+        <button onclick="handleAuth()" id="authBtn">Login</button>
+
     </div>
 
     <script>
-        let isLogin = true;
-
-        function toggleMode() {
-            isLogin = !isLogin;
-            document.getElementById('title').innerText = isLogin ? 'Admin Access' : 'New Commander';
-            document.getElementById('authBtn').innerText = isLogin ? 'Initialize Link' : 'Register System';
-            document.querySelector('.toggle-text').innerText = isLogin ? 'First time? Register here' : 'Back to Login';
+        // เพิ่มฟังก์ชัน: กด Enter แล้ว Login ได้เลย (UX ที่ดี)
+        function handleEnter(e) {
+            if (e.key === 'Enter') handleAuth();
         }
 
         async function handleAuth() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
-            const endpoint = isLogin ? '/api/login' : '/api/register';
 
             try {
-                const res = await fetch(endpoint, {
+                // ยิงไปที่ /api/login อย่างเดียว ไม่ต้องเช็ค isLogin แล้ว
+                const res = await fetch('/api/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
@@ -173,11 +169,11 @@
                 const data = await res.json();
 
                 if (res.ok) {
-                    window.location.href = '/'; // ไปหน้า Dashboard
+                    window.location.href = '/';
                 } else {
                     const err = document.getElementById('errorMsg');
                     err.style.display = 'block';
-                    err.innerText = data.error || 'Authentication Failed';
+                    err.innerText = "Access Denied"; // ข้อความเรียบๆ ดูปลอดภัย
                 }
             } catch (e) {
                 console.error(e);
