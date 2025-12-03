@@ -1,0 +1,46 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ตารางเก็บข้อมูล User และแต้ม
+model User {
+  id        String   @id // ใช้ Discord ID เป็น Primary Key เลย
+  username  String?  // เก็บชื่อไว้ดูเล่น (เผื่อเปลี่ยนชื่อ)
+  points    Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // ความสัมพันธ์: User หนึ่งคน มีประวัติการแลกของได้หลายครั้ง
+  redemptions Redemption[]
+}
+
+// ตารางของรางวัล (ที่แอดมินจะมาแก้ผ่านหน้าเว็บ)
+model Item {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  cost        Int      // ราคาแต้มที่ต้องใช้แลก
+  stock       Int      @default(-1) // -1 แปลว่ามีไม่จำกัด
+  isActive    Boolean  @default(true) // เอาไว้ปิดการมองเห็นของชิ้นนี้ชั่วคราว
+
+  redemptions Redemption[]
+}
+
+// ตารางประวัติการแลก (Logs)
+model Redemption {
+  id        Int      @id @default(autoincrement())
+  userId    String
+  itemId    Int
+  cost      Int      // บันทึกราคา ณ ตอนที่แลก (เผื่ออนาคตราคาของเปลี่ยน)
+  redeemedAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+  item      Item     @relation(fields: [itemId], references: [id])
+}

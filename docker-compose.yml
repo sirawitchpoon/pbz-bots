@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  honor-bot:
+    build: ./honor-bot
+    container_name: honor-bot-prod
+    restart: always
+    ports:
+      - "3000:3000" # เปิด Port ให้หน้าเว็บ Admin เข้าได้
+    volumes:
+      # ✅ Map โฟลเดอร์ database ออกมาเก็บไว้ที่เครื่อง VPS (กันข้อมูลหาย)
+      - ./honor-db-data:/app/data
+    env_file:
+      - .env
+    environment:
+      # ⚠️ สำคัญ: บอกให้ Prisma ไปสร้างไฟล์ DB ในโฟลเดอร์ที่เรา Map ไว้
+      - DATABASE_URL=file:/app/data/dev.db

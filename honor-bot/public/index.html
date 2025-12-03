@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phantom Blade Zero - Honor Board</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            display: grid;
+            gap: 40px;
+        }
+
+        /* Headers */
+        h1,
+        h2 {
+            border-bottom: 2px solid #ff4d4d;
+            padding-bottom: 10px;
+            color: #ff4d4d;
+        }
+
+        h2 {
+            font-size: 1.5em;
+            margin-top: 0;
+        }
+
+        /* Sections */
+        .section {
+            background: #262626;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #444;
+        }
+
+        th {
+            background: #333;
+            color: #ff4d4d;
+        }
+
+        tr:hover {
+            background: #303030;
+        }
+
+        /* Badges & Buttons */
+        .badge {
+            background: #ff4d4d;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .cost-badge {
+            background: #4d94ff;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        /* Form */
+        .form-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        input {
+            padding: 10px;
+            background: #333;
+            border: 1px solid #555;
+            color: white;
+            border-radius: 4px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #ff4d4d;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #ff4d4d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #e60000;
+        }
+
+        /* Layout for 2 Columns */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <center>
+            <h1>🗡️ The Order's Admin Console</h1>
+        </center>
+
+        <div class="grid-2">
+            <div class="section">
+                <h2>🏆 Warrior Rankings</h2>
+                <div id="loadingUsers">Loading...</div>
+                <table id="userTable">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Name</th>
+                            <th>Honor</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userBody"></tbody>
+                </table>
+            </div>
+
+            <div class="section">
+                <h2>🎒 Item Registry</h2>
+
+                <div style="background: #333; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
+                    <h3 style="margin-top:0; font-size:1em; color:#ccc;">Add New Reward</h3>
+                    <div class="form-group">
+                        <input type="text" id="itemName" placeholder="Item Name (e.g. Steam Key)" style="flex: 2;">
+                        <input type="number" id="itemCost" placeholder="Cost" style="flex: 1;">
+                    </div>
+                    <input type="text" id="itemDesc" placeholder="Description (Optional)"
+                        style="width: 96%; margin-bottom: 10px;">
+                    <button onclick="addItem()">+ Add Item</button>
+                </div>
+
+                <table id="itemTable">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Cost</th>
+                            <th>Stock</th>
+                        </tr>
+                    </thead>
+                    <tbody id="itemBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 1. ดึงข้อมูล Users
+        async function fetchUsers() {
+            const res = await fetch('/api/users');
+            const users = await res.json();
+            const tbody = document.getElementById('userBody');
+            tbody.innerHTML = '';
+            document.getElementById('loadingUsers').style.display = 'none';
+
+            users.forEach((u, i) => {
+                tbody.innerHTML += `
+                <tr>
+                    <td>#${i + 1}</td>
+                    <td>${u.username}</td>
+                    <td><span class="badge">${u.points} 👻</span></td>
+                </tr>`;
+            });
+        }
+
+        // 2. ดึงข้อมูล Items
+        async function fetchItems() {
+            const res = await fetch('/api/items');
+            const items = await res.json();
+            const tbody = document.getElementById('itemBody');
+            tbody.innerHTML = '';
+
+            items.forEach(item => {
+                tbody.innerHTML += `
+                <tr>
+                    <td>
+                        <strong>${item.name}</strong><br>
+                        <small style="color:#888">${item.description || '-'}</small>
+                    </td>
+                    <td><span class="cost-badge">${item.cost}</span></td>
+                    <td>${item.stock === -1 ? '∞' : item.stock}</td>
+                </tr>`;
+            });
+        }
+
+        // 3. ฟังก์ชันกดปุ่ม Add Item
+        async function addItem() {
+            const name = document.getElementById('itemName').value;
+            const cost = document.getElementById('itemCost').value;
+            const desc = document.getElementById('itemDesc').value;
+
+            if (!name || !cost) return alert("Please enter Name and Cost!");
+
+            try {
+                const res = await fetch('/api/items', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, cost, description: desc })
+                });
+
+                if (res.ok) {
+                    // เคลียร์ช่องและโหลดข้อมูลใหม่
+                    document.getElementById('itemName').value = '';
+                    document.getElementById('itemCost').value = '';
+                    document.getElementById('itemDesc').value = '';
+                    fetchItems();
+                } else {
+                    alert("Error adding item");
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // Run on load
+        fetchUsers();
+        fetchItems();
+    </script>
+
+</body>
+
+</html>
